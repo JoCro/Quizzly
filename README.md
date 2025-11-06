@@ -15,20 +15,21 @@ Users can manage, edit, and delete their own quizzes — all with secure authent
 ✅ **Full CRUD for Quizzes**  
 ✅ **Comprehensive Test Suite** using `pytest`  
 ✅ **80%+ Test Coverage** ensured with `coverage.py`  
-✅ **CORS-ready REST API** built with Django REST Framework  
+✅ **CORS-ready REST API** built with Django REST Framework
 
 ---
 
 ## 🛠️ Tech Stack
 
-**Backend:**  
-- Django 5  
-- Django REST Framework  
-- SimpleJWT  
-- Whisper (openai‑whisper)  
-- Google Gemini (google-genai)  
-- yt‑dlp  
-- pytest / pytest‑django  
+**Backend:**
+
+- Django 5
+- Django REST Framework
+- SimpleJWT
+- Whisper (openai‑whisper)
+- Google Gemini (google-genai)
+- yt‑dlp
+- pytest / pytest‑django
 
 ---
 
@@ -37,7 +38,7 @@ Users can manage, edit, and delete their own quizzes — all with secure authent
 ### 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/quizly.git
+git clone https://github.com/JoCro/Quizzly.git
 cd quizly
 ```
 
@@ -99,17 +100,19 @@ pytest --cov
 ## 📚 API Overview
 
 ### 🔐 Authentication
-- `POST /api/register/` — Create a user  
-- `POST /api/login/` — Login with JWTs  
-- `POST /api/logout/` — Clear cookies  
-- `POST /api/token/refresh/` — Refresh access token  
+
+- `POST /api/register/` — Create a user
+- `POST /api/login/` — Login with JWTs
+- `POST /api/logout/` — Clear cookies
+- `POST /api/token/refresh/` — Refresh access token
 
 ### 📝 Quizzes
-- `POST /api/createQuiz/` — Generate quiz from YouTube URL  
-- `GET /api/quizzes/` — List user quizzes  
-- `GET /api/quizzes/{id}/` — Retrieve quiz  
-- `PATCH /api/quizzes/{id}/` — Update quiz  
-- `DELETE /api/quizzes/{id}/` — Delete quiz  
+
+- `POST /api/createQuiz/` — Generate quiz from YouTube URL
+- `GET /api/quizzes/` — List user quizzes
+- `GET /api/quizzes/{id}/` — Retrieve quiz
+- `PATCH /api/quizzes/{id}/` — Update quiz
+- `DELETE /api/quizzes/{id}/` — Delete quiz
 
 ---
 
@@ -117,7 +120,7 @@ pytest --cov
 
 ✅ 80%+ total coverage required  
 ✅ Mocked AI/video/download calls  
-✅ Full coverage of CRUD and auth flows  
+✅ Full coverage of CRUD and auth flows
 
 ---
 
@@ -156,4 +159,3 @@ MIT License. You are free to use this project for learning, experimenting, or ex
 
 If you like Quizly, consider starring the repository on GitHub!  
 It helps a lot ⭐
-
