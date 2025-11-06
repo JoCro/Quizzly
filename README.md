@@ -154,8 +154,3 @@ Please open an issue first to discuss major changes.
 MIT License. You are free to use this project for learning, experimenting, or extending your own applications.
 
 ---
-
-## ⭐ Support the Project
-
-If you like Quizly, consider starring the repository on GitHub!  
-It helps a lot ⭐
