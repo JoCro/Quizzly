@@ -1,0 +1,53 @@
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.log
+*.pot
+*.mo
+
+# Virtualenv / Tools
+.env/
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Tests / Coverage
+.pytest_cache/
+.coverage*
+htmlcov/
+coverage.xml
+
+# Django specific
+db.sqlite3
+*.sqlite3
+/media/
+staticfiles/
+tmp/
+temp/
+logs/
+
+# App-spezifisch (Downloads/Artefakte)
+quizzly_*/        # unsere temp-Verzeichnisse von yt-dlp
+*.wav
+*.mp3
+*.mp4
+
+# Node (falls du ein Frontend daneben liegen hast)
+node_modules/
+dist/
+build/
+
+# Env-Dateien / Secrets
+.env
+*.env
