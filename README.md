@@ -72,6 +72,7 @@ python manage.py runserver
 ## 🔑 Environment Variables
 
 Create a `.env` file in your .env-folder:
+**f.e. the .env.example-file**
 
 ```
 GEMINI_API_KEY=your_api_key (required!)
