@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.middleware.csrf import get_token
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -78,7 +78,8 @@ class RegistrationView(APIView):
         return Response({'detail': 'User created successfully'}, status=status.HTTP_201_CREATED,)
 
 
-@method_decorator(ensure_csrf_cookie, name='dispatch')
+@method_decorator(ensure_csrf_cookie, name='get')
+@method_decorator(csrf_exempt, name='post')
 class LoginView(TokenObtainPairView):
     """
     POST /api/login/
@@ -139,19 +140,48 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            refresh_cookie_name = getattr(
-                settings, "JWT_REFRESH_COOKIE", 'refresh_token')
-            refresh_cookie = request.COOKIES.get(refresh_cookie_name)
+            resp = Response(
+                {
+                    "detail": "Log-Out successfully! All Tokens will be deleted. Refresh token is now invalid."
+                },
+                status=status.HTTP_200_OK,
+            )
 
-            response = Response({
-                'detail': 'Logout successfully. All Tokens will be deleted. Refresh token is now invalid.'
-            }, status=status.HTTP_200_OK,)
+            access_cookie = getattr(
+                settings, "JWT_ACCESS_COOKIE", "access_token")
+            refresh_cookie = getattr(
+                settings, "JWT_REFRESH_COOKIE", "refresh_token")
 
-            return clear_jwt_cookies(response)
+            cookie_kwargs = {
+                "path": "/",
+                "domain": getattr(settings, "SESSION_COOKIE_DOMAIN", None),
+                "secure": getattr(settings, "SESSION_COOKIE_SECURE", False),
+                "samesite": getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
+            }
+            resp.delete_cookie(access_cookie, **cookie_kwargs)
+            resp.delete_cookie(refresh_cookie, **cookie_kwargs)
+            csrf_token = get_token(request)
+            resp.set_cookie(
+                getattr(settings, "CSRF_COOKIE_NAME", "csrftoken"),
+                csrf_token,
+                max_age=None,
+                path="/",
+                domain=getattr(settings, "CSRF_COOKIE_DOMAIN", None),
+                secure=getattr(settings, "CSRF_COOKIE_SECURE", False),
+                httponly=False,
+                samesite=getattr(settings, "CSRF_COOKIE_SAMESITE", "Lax"),
+            )
+
+            return resp
+
         except Exception:
-            return Response({'detail': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+            return Response(
+                {"detail": "Internal Server Error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
+@method_decorator(csrf_exempt, name='post')
 class RefreshView(TokenRefreshView):
     """
     POST /api/token/refresh/

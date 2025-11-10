@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 
 from .serializers import QuizSerializer, QuestionSerializer, QuizSlimSerializer, QuizDetailSerializer, QuizListSerializer, QuizUpdateSerializer
-from .services import validate_youtube_url, download_audio_wav, whisper_transcribe, generate_quiz_from_transcript
+from .services import validate_youtube_url, download_audio_wav, whisper_transcribe, generate_quiz_from_transcript, create_quiz_payload, rename_quiz_instance, delete_quiz_instance
 from quizzly_app.models import Quiz, Question
 
 logger = logging.getLogger(__name__)
@@ -30,37 +30,18 @@ class CreateQuizView(APIView):
         except ValueError:
             return Response({"detail": "Ungültige URL oder Anfragedaten."}, status=status.HTTP_400_BAD_REQUEST)
 
-        tmpdir = None
         try:
-            try:
-                wav_path, meta = download_audio_wav(url)
-                tmpdir = meta.get("tmpdir")
-            except Exception as e:
-                logger.exception("Download-Fehler")
-                msg = f"Audio-Download fehlgeschlagen: {e}" if settings.DEBUG else "Interner Serverfehler."
-                return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            try:
-                transcript = whisper_transcribe(wav_path)
-                if not transcript:
-                    return Response(
-                        {"detail": "Transkript konnte nicht erzeugt werden."},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-            except Exception as e:
-                logger.exception("Whisper-Fehler")
-                msg = f"Transkription fehlgeschlagen: {e}" if settings.DEBUG else "Interner Serverfehler."
-                return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            try:
-                quiz_data = generate_quiz_from_transcript(transcript)
-            except Exception as e:
-                logger.exception("Gemini-Fehler")
-                msg = f"Quiz-Generierung fehlgeschlagen: {e}" if settings.DEBUG else "Interner Serverfehler."
-                return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            quiz_data = create_quiz_payload(url)
+        except Exception as e:
+            logger.exception("CreateQuizView - create_quiz_payload failed")
+            msg = f"Audio-Download fehlgeschlagen: {e}" if settings.DEBUG else "Interner Serverfehler."
+            return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            title = (quiz_data.get("title") or "Quiz")[:255]
-            description = quiz_data.get("description") or ""
-            questions = quiz_data.get("questions") or []
+        title = (quiz_data.get("title") or "Quiz")[:255]
+        description = quiz_data.get("description") or ""
+        questions = quiz_data.get("questions") or []
 
+        try:
             quiz = Quiz.objects.create(
                 owner=request.user,
                 title=title,
@@ -95,10 +76,6 @@ class CreateQuizView(APIView):
             logger.exception("Unerwarteter Fehler in CreateQuizView")
             msg = f"Interner Serverfehler: {e}" if settings.DEBUG else "Interner Serverfehler."
             return Response({"detail": msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        finally:
-            if tmpdir and os.path.isdir(tmpdir):
-                shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 class UserQuizzesView(APIView):
@@ -187,7 +164,7 @@ class QuizDetailView(APIView):
                 return Response({'detail': 'Quiz could not be found.'},  status=status.HTTP_404_NOT_FOUND)
             if quiz.owner_id != request.user.id:
                 return Response({'detail': 'You do not have permission to delete this quiz.'}, status=status.HTTP_403_FORBIDDEN)
-            quiz.delete()
+            delete_quiz_instance(quiz)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception:
             return Response({'detail': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

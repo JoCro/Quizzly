@@ -2,11 +2,13 @@ import os
 import tempfile
 import yt_dlp
 import re
+import shutil
 import whisper
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from google import genai
 from google.genai.errors import ClientError
+
 
 YOUTUBE_REGEX = re.compile(
     r"^https:\/\/www\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})$")
@@ -51,6 +53,57 @@ Requirements:
 - The output must be valid JSON and parsable as-is (e.g., using Python's json.loads).
 
 - Do not include explanations, comments, or any text outside the JSON."""
+
+
+class AudioDownloadError(Exception):
+    pass
+
+
+class TranscriptionError(Exception):
+    pass
+
+
+class QuizGenerationOverloaded(Exception):
+    pass
+
+
+class QuizGenerationError(Exception):
+    pass
+
+
+def create_quiz_payload(url: str) -> dict:
+    """
+    Given a YouTube URL, downloads the audio, transcribes it using Whisper,
+    and generates a quiz using Gemini API.
+    Returns the quiz as a dictionary.
+    """
+    validate_youtube_url(url)
+    tmpdir = None
+    wav_path, ctx = download_audio_wav(url)
+    try:
+        transcript = whisper_transcribe(wav_path)
+    finally:
+        tmpdir = (ctx or {}).get("tmpdir")
+        if tmpdir:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+    quiz_json = generate_quiz_from_transcript(transcript)
+    return quiz_json
+
+
+def rename_quiz_instance(quiz, new_title: str):
+    """
+    Renames the given quiz instance and updates question titles accordingly.
+    """
+    quiz.title = new_title
+    quiz.save(update_fields=['title'])
+    return quiz
+
+
+def delete_quiz_instance(quiz) -> None:
+    """
+    Deletes the given quiz instance and all its related questions.
+    """
+    quiz.delete()
 
 
 def _pick_flash_model(client: genai.Client) -> str:
