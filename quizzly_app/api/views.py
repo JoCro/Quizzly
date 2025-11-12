@@ -88,12 +88,8 @@ class UserQuizzesView(APIView):
 
     def get(self, request):
         try:
-            qs = (
-                Quiz.objects
-                .filter(owner=request.user)
-                .prefetch_related("questions")
-                .order_by("-created_at")
-            )
+            qs = Quiz.objects.all() if request.user.is_staff or request.user.is_superuser else Quiz.objects.filter(owner=request.user)
+            qs = qs.prefetch_related("questions").order_by("-created_at")
             data = QuizListSerializer(qs, many=True).data
             return Response(data, status=status.HTTP_200_OK)
         except Exception as e:
@@ -123,7 +119,9 @@ class QuizDetailView(APIView):
                 )
             except Quiz.DoesNotExist:
                 return Response({'detail': 'Quiz could not be found.'}, status=status.HTTP_404_NOT_FOUND)
-            if quiz.owner_id != request.user.id:
+            user = request.user
+            is_admin = bool(user and (user.is_staff or user.is_superuser))
+            if not (is_admin or quiz.owner_id == user.id):
                 return Response({'detail': 'You do not have permission to access this quiz.'}, status=status.HTTP_403_FORBIDDEN)
             data = QuizDetailSerializer(quiz).data
             return Response(data, status=status.HTTP_200_OK)
@@ -137,7 +135,9 @@ class QuizDetailView(APIView):
             except Quiz.DoesNotExist:
                 return Response({"detail": "Quiz nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
 
-            if quiz.owner_id != request.user.id:
+            user = request.user
+            is_admin = bool(user and (user.is_staff or user.is_superuser))
+            if not (is_admin or quiz.owner_id == user.id):
                 return Response({"detail": "Zugriff verweigert."}, status=status.HTTP_403_FORBIDDEN)
 
             serializer = QuizUpdateSerializer(
@@ -162,7 +162,9 @@ class QuizDetailView(APIView):
                 quiz = Quiz.objects.get(pk=id)
             except Quiz.DoesNotExist:
                 return Response({'detail': 'Quiz could not be found.'},  status=status.HTTP_404_NOT_FOUND)
-            if quiz.owner_id != request.user.id:
+            user = request.user
+            is_admin = bool(user and (user.is_staff or user.is_superuser))
+            if not (is_admin or quiz.owner_id == user.id):
                 return Response({'detail': 'You do not have permission to delete this quiz.'}, status=status.HTTP_403_FORBIDDEN)
             delete_quiz_instance(quiz)
             return Response(status=status.HTTP_204_NO_CONTENT)

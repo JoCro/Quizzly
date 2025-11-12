@@ -76,6 +76,8 @@ Create a `.env` file in your root:
 
 ```
 GEMINI_API_KEY=your_api_key (required!)
+CSRF_TRUSTED_ORIGINS=Your_TRUSTED_ORIGINS(required!)
+CORS_ALLOWED_ORIGINS=YOUR_ALLOWED_ORIGINS(required!)
 OPTIONALS :
 SECRET_KEY=your_secret_key
 DEBUG=True

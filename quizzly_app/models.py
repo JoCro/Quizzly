@@ -3,6 +3,11 @@ from django.conf import settings
 
 
 class Quiz(models.Model):
+
+    class Meta:
+        verbose_name = "Quiz"
+        verbose_name_plural = "Quizzes"
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                               related_name='quizzes', null=True, blank=True)
     title = models.CharField(max_length=255)
@@ -23,3 +28,7 @@ class Question(models.Model):
     answer = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        title = (self.question_title or "").strip()
+        return title if title else f"Question #{self.pk}"
